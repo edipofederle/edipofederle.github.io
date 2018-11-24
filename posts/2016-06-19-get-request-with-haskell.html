@@ -41,22 +41,22 @@
 <p>50 horas depois, tudo instalado. Vamos em frente:</p>
 <h3 id="experimentação-no-ghci">Experimentação no ghci</h3>
 <p>Vamos fazer alguns testes direto no gchi</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" title="1"><span class="fu">&gt;</span> <span class="kw">import</span> <span class="dt">Network.Wreq</span></a>
-<a class="sourceLine" id="cb2-2" title="2"><span class="fu">&gt;</span> r <span class="ot">&lt;-</span> get <span class="st">&quot;http://httpbin.org/get&quot;</span></a>
-<a class="sourceLine" id="cb2-3" title="3"><span class="fu">&gt;</span> ghci <span class="fu">:</span><span class="kw">type</span> r</a>
-<a class="sourceLine" id="cb2-4" title="4"><span class="fu">&gt;</span><span class="ot"> r ::</span> <span class="dt">Response</span> <span class="dt">ByteString</span></a></code></pre></div>
+<pre><code>&gt; import Network.Wreq
+&gt; r &lt;- get &quot;http://httpbin.org/get&quot;
+&gt; ghci :type r
+&gt; r :: Response ByteString</code></pre>
 <p>Ok,<code>r</code>contém a resposta do servidor.</p>
 <p>Pelo que parece literais <code>String</code> são sempre do tipo <code>String</code>. Algumas bibliotecas Haskell mais complexas precisam lidar corretamente com três tipos: <code>String</code>, <code>Text</code> e <code>ByteString</code>. Para não precisarmos usar conversões o tempo todo existe uma extensão chamada <code>OverloadedStrings</code>.</p>
 <p>Para ativar a extensão:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" title="1"><span class="fu">&gt;</span> <span class="fu">:</span>set <span class="fu">-</span><span class="dt">XOverloadedStrings</span></a></code></pre></div>
+<pre><code>&gt; :set -XOverloadedStrings</code></pre>
 <p>Pois bem. Vou precisar capturar alguns dados noresponse:</p>
 <p><strong>wreq</strong> usa o <em>package</em> <strong>lens</strong>, para várias coisas, inclusive isso, vamos importar</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">&gt;</span> <span class="kw">import</span> <span class="dt">Control.Lens</span></a></code></pre></div>
 <p>Agora podemos recuperar algumas informações, como ostatusdo response.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" title="1"><span class="fu">&gt;</span> r <span class="fu">^.</span> responseStatus</a>
-<a class="sourceLine" id="cb5-2" title="2"><span class="fu">&gt;</span> <span class="dt">Status</span> {statusCode <span class="fu">=</span> <span class="dv">200</span>, statusMessage <span class="fu">=</span> <span class="st">&quot;OK&quot;</span>}</a></code></pre></div>
+<pre><code>&gt; r ^. responseStatus
+&gt; Status {statusCode = 200, statusMessage = &quot;OK&quot;}</code></pre>
 <p>Também podemos fazer composições, como por exemplo para pegar o <code>statusCode</code>:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" title="1"><span class="fu">&gt;</span> r <span class="fu">^.</span> responseStatus <span class="fu">.</span> statusCode</a></code></pre></div>
+<pre><code>&gt; r ^. responseStatus . statusCode</code></pre>
 <p>Certo, isso já é algo.</p>
 <h3 id="o-projeto">O “projeto”</h3>
 <p>Vamos colocar isso em um arquivo para ficar mais simples editar:</p>
@@ -69,17 +69,17 @@ tougg-client.hs:0:53: error:
 	• Variable not in scope: main :: IO a0
 	• Perhaps you meant ‘min’ (imported from Prelude)</code></pre>
 <p>Motherfucker!! Então tentei isso:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">import</span> <span class="dt">Network.Wreq</span></a>
-<a class="sourceLine" id="cb9-2" title="2"></a>
-<a class="sourceLine" id="cb9-3" title="3">main <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb9-4" title="4">  putStrln <span class="st">&quot;Hi&quot;</span></a>
-<a class="sourceLine" id="cb9-5" title="5">e recebi isso agora<span class="fu">.</span></a>
-<a class="sourceLine" id="cb9-6" title="6"></a>
-<a class="sourceLine" id="cb9-7" title="7">	tougg<span class="fu">-</span>client<span class="fu">.</span>hs<span class="fu">:</span><span class="dv">6</span><span class="fu">:</span><span class="dv">3</span><span class="fu">:</span> <span class="fu">error:</span></a>
-<a class="sourceLine" id="cb9-8" title="8">• <span class="dt">Variable</span> <span class="fu">not</span> <span class="kw">in</span> scope<span class="fu">:</span><span class="ot"> putStrln ::</span> [<span class="dt">Char</span>] <span class="ot">-&gt;</span> t</a>
-<a class="sourceLine" id="cb9-9" title="9">• <span class="dt">Perhaps</span> you meant one <span class="kw">of</span> these<span class="fu">:</span></a>
-<a class="sourceLine" id="cb9-10" title="10">	‘putStrLn’ (imported from <span class="dt">Prelude</span>),</a>
-<a class="sourceLine" id="cb9-11" title="11">	‘putStr’ (imported from <span class="dt">Prelude</span>)</a></code></pre></div>
+<pre><code>import Network.Wreq
+
+main = do
+  putStrln &quot;Hi&quot;
+e recebi isso agora.
+
+	tougg-client.hs:6:3: error:
+• Variable not in scope: putStrln :: [Char] -&gt; t
+• Perhaps you meant one of these:
+	‘putStrLn’ (imported from Prelude),
+	‘putStr’ (imported from Prelude)</code></pre>
 <p>Motherfucker!!! Ok, agora digitei errado mesmo, <code>putStrln</code> ao invés de <code>putStrLn</code>. Por sinal, ótima mensagem de erro aqui.</p>
 <p>Vamos tentar denovo agora:</p>
 <pre><code>&gt; runhaskell tougg-client.hs
@@ -87,33 +87,33 @@ tougg-client.hs:0:53: error:
 <p>Sucesso! temos algo rodando.</p>
 <p>Agora vamos mudar para o <em>end-point</em> que comentei no lá começo do post. Esse <em>end-point</em> espera um token, como autenticação.</p>
 <p>Logo preciso dar um jeito de passar esse token no header da requisição. <code>getWith</code> parece ser o que preciso aqui, e também header.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> header <span class="st">&quot;Authorization: Token token&quot;</span> <span class="fu">.~</span> [<span class="st">&quot;token_here&quot;</span>]</a></code></pre></div>
+<pre><code>let opts = defaults &amp; header &quot;Authorization: Token token&quot; .~ [&quot;token_here&quot;]</code></pre>
 <p>parece que é algo assim faz o serviço. Vamos colocar isso no arquivo fonte:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb12-1" title="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
-<a class="sourceLine" id="cb12-2" title="2"></a>
-<a class="sourceLine" id="cb12-3" title="3"><span class="kw">import</span> <span class="dt">Network.Wreq</span></a>
-<a class="sourceLine" id="cb12-4" title="4"><span class="kw">import</span> <span class="dt">Control.Lens</span></a>
-<a class="sourceLine" id="cb12-5" title="5"><span class="kw">import</span> <span class="dt">Data.Aeson.Lens</span> (_<span class="dt">String</span>, key)</a>
-<a class="sourceLine" id="cb12-6" title="6"></a>
-<a class="sourceLine" id="cb12-7" title="7">main <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb12-8" title="8">  <span class="kw">let</span> opts <span class="fu">=</span> defaults <span class="fu">&amp;</span> header <span class="st">&quot;Authorization: Token token&quot;</span> <span class="fu">.~</span> [<span class="st">&quot;token_here&quot;</span>]</a>
-<a class="sourceLine" id="cb12-9" title="9">  <span class="fu">putStrLn</span> <span class="st">&quot;Eu venci!&quot;</span></a></code></pre></div>
+<pre><code>{-# LANGUAGE OverloadedStrings #-}
+
+import Network.Wreq
+import Control.Lens
+import Data.Aeson.Lens (_String, key)
+
+main = do
+  let opts = defaults &amp; header &quot;Authorization: Token token&quot; .~ [&quot;token_here&quot;]
+  putStrLn &quot;Eu venci!&quot;</code></pre>
 <p>Quando estava no <strong>ghci</strong> foi usado: <code>set -XOverloadedStrings</code>para habilitar a extensão, quando em um arquivo fonte, precisamos usar como mostrado na linha <code>1</code>.</p>
 <pre><code>&gt; runhaskell tougg-client.hs
 &gt; Eu venci!</code></pre>
 <p>YEAH!. Parece que tudo está funcionando ainda. Agora preciso fazer a requisição passando o <code>opts</code>, onde tem o <code>token</code>. Vamos usar o <code>getWith</code>, mencionado anteriormente:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb14-1" title="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
-<a class="sourceLine" id="cb14-2" title="2"></a>
-<a class="sourceLine" id="cb14-3" title="3"><span class="kw">import</span> <span class="dt">Network.Wreq</span></a>
-<a class="sourceLine" id="cb14-4" title="4"><span class="kw">import</span> <span class="dt">Control.Lens</span></a>
-<a class="sourceLine" id="cb14-5" title="5"><span class="kw">import</span> <span class="dt">Data.Aeson.Lens</span> (_<span class="dt">String</span>, key)</a>
-<a class="sourceLine" id="cb14-6" title="6"></a>
-<a class="sourceLine" id="cb14-7" title="7">main <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb14-8" title="8">  <span class="kw">let</span> opts   <span class="fu">=</span> defaults <span class="fu">&amp;</span> header <span class="st">&quot;Authorization: Token token&quot;</span> <span class="fu">.~</span> [<span class="st">&quot;token_here&quot;</span>]</a>
-<a class="sourceLine" id="cb14-9" title="9">  r <span class="ot">&lt;-</span>  getWith opts <span class="st">&quot;http://localhost:3000/api/users/8348&quot;</span></a>
-<a class="sourceLine" id="cb14-10" title="10"></a>
-<a class="sourceLine" id="cb14-11" title="11">  <span class="kw">let</span> status <span class="fu">=</span> r <span class="fu">^.</span> responseStatus</a>
-<a class="sourceLine" id="cb14-12" title="12">  <span class="fu">putStrLn</span>  status</a></code></pre></div>
+<pre><code>{-# LANGUAGE OverloadedStrings #-}
+
+import Network.Wreq
+import Control.Lens
+import Data.Aeson.Lens (_String, key)
+
+main = do
+  let opts   = defaults &amp; header &quot;Authorization: Token token&quot; .~ [&quot;token_here&quot;]
+  r &lt;-  getWith opts &quot;http://localhost:3000/api/users/8348&quot;
+
+  let status = r ^. responseStatus
+  putStrLn  status</code></pre>
 <p>Vamos rodar.</p>
 <pre><code>&gt; runhaskell tougg-client.hs
 
@@ -135,12 +135,12 @@ tougg-client.hs:0:53: error:
 <p>Agora preciso ler do prompt o ID do usuário que queremos.</p>
 <p><strong>google:</strong> haskell how to read from command line</p>
 <p>Parece que o que precisamos é um simples</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb16-1" title="1">idUser <span class="ot">&lt;-</span> <span class="fu">getLine</span></a></code></pre></div>
+<pre><code>idUser &lt;- getLine</code></pre>
 <p>Podemos usar <code>:t</code> para ver o tipo:</p>
 <pre><code>:t getLine
 getLine :: IO String</code></pre>
 <p>Parece que faz sentido. Agora precisamos concatenar esse <code>idUser</code> na nossa URL. <code>++</code> faz isso. Vamos tentar isso:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb18-1" title="1">r <span class="ot">&lt;-</span>  getWith opts http<span class="fu">://</span>localhost<span class="fu">:</span><span class="dv">3000</span><span class="fu">/</span>api<span class="fu">/</span>users<span class="fu">/</span><span class="st">&quot; ++ idUser</span></a></code></pre></div>
+<pre><code>r &lt;-  getWith opts http://localhost:3000/api/users/&quot; ++ idUser</code></pre>
 <p>Rodando:</p>
 <pre><code>tougg-client.hs:12:9: error:
 	• Couldn't match expected type ‘[Char]’
@@ -157,28 +157,28 @@ getLine :: IO String</code></pre>
 			 let opts = defaults &amp; header &quot;Authorization: Token token&quot; .~ ...;
 			 .... }</code></pre>
 <p>Motherfucker!!!!. Não sei, denovo! Mas parece que isso resolve:</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb20-1" title="1">r <span class="ot">&lt;-</span>  getWith opts (<span class="st">&quot;http://localhost:3000/api/users/&quot;</span> <span class="fu">++</span> idUser)</a></code></pre></div>
+<pre><code>r &lt;-  getWith opts (&quot;http://localhost:3000/api/users/&quot; ++ idUser)</code></pre>
 <p>Rodando:</p>
 <pre><code>&gt; runhaskell tougg-client.hs
   Informe o ID do usuário desejado
   6526
   Status {statusCode = 200, statusMessage = &quot;OK&quot;}</code></pre>
 <p>Ótimo!. Na verdade preciso pegar o <code>body</code>. O <em>package</em> <strong>lens</strong> possui várias funções bem úteis para trabalhar com JSON. No <code>body</code> recebemos um JSON contendo algumas inforamações do usuário. A <em>keyuser</em>, retorna o e-mail do usuário. Para poder pegar essa informação alterei o código para isso:</p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb22-1" title="1"><span class="ot">{-# LANGUAGE OverloadedStrings #-}</span></a>
-<a class="sourceLine" id="cb22-2" title="2"></a>
-<a class="sourceLine" id="cb22-3" title="3"><span class="kw">import</span> <span class="dt">Network.Wreq</span></a>
-<a class="sourceLine" id="cb22-4" title="4"><span class="kw">import</span> <span class="dt">Control.Lens</span></a>
-<a class="sourceLine" id="cb22-5" title="5"><span class="kw">import</span> <span class="dt">Data.Aeson.Lens</span> (key)</a>
-<a class="sourceLine" id="cb22-6" title="6"><span class="kw">import</span> <span class="dt">Data.Aeson.Lens</span> (_<span class="dt">String</span>, key)</a>
-<a class="sourceLine" id="cb22-7" title="7"></a>
-<a class="sourceLine" id="cb22-8" title="8">main <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb22-9" title="9">  <span class="fu">putStrLn</span> <span class="st">&quot;Informe o ID do usuário desejado&quot;</span></a>
-<a class="sourceLine" id="cb22-10" title="10">  idUser <span class="ot">&lt;-</span> <span class="fu">getLine</span></a>
-<a class="sourceLine" id="cb22-11" title="11">  <span class="kw">let</span> opts   <span class="fu">=</span> defaults <span class="fu">&amp;</span> header <span class="st">&quot;Authorization: Token token&quot;</span> <span class="fu">.~</span> [<span class="st">&quot;token_here&quot;</span>]</a>
-<a class="sourceLine" id="cb22-12" title="12">  r <span class="ot">&lt;-</span>  getWith opts (<span class="st">&quot;http://localhost:3000/api/users/&quot;</span> <span class="fu">++</span> idUser)</a>
-<a class="sourceLine" id="cb22-13" title="13"></a>
-<a class="sourceLine" id="cb22-14" title="14">  <span class="kw">let</span> email <span class="fu">=</span> r <span class="fu">^.</span> responseBody <span class="fu">.</span> key <span class="st">&quot;user&quot;</span> <span class="fu">.</span> _String</a>
-<a class="sourceLine" id="cb22-15" title="15">  <span class="fu">print</span>  email</a></code></pre></div>
+<pre><code>{-# LANGUAGE OverloadedStrings #-}
+
+import Network.Wreq
+import Control.Lens
+import Data.Aeson.Lens (key)
+import Data.Aeson.Lens (_String, key)
+
+main = do
+  putStrLn &quot;Informe o ID do usuário desejado&quot;
+  idUser &lt;- getLine
+  let opts   = defaults &amp; header &quot;Authorization: Token token&quot; .~ [&quot;token_here&quot;]
+  r &lt;-  getWith opts (&quot;http://localhost:3000/api/users/&quot; ++ idUser)
+
+  let email = r ^. responseBody . key &quot;user&quot; . _String
+  print  email</code></pre>
 <h2 id="conclusão">Conclusão</h2>
 <p>Haskell é bacana! É bom programar como se fosse a primeira vez. A linguagem é fortemente tipada e ao mesmo tempo os tipos são inferidos pelo compilador, não sendo necessário fazer isso manualmente, o que é algo bastante interessante.</p>
 <p>Esse post foi somente uma brincadeira, não entramos em detalhe em nada, porém foi bacana para explorar algo diferente e usar o google 10 vezes por minute :)</p>
