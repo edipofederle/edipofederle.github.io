@@ -51,7 +51,7 @@
 <pre><code>&gt; :set -XOverloadedStrings</code></pre>
 <p>Pois bem. Vou precisar capturar alguns dados noresponse:</p>
 <p><strong>wreq</strong> usa o <em>package</em> <strong>lens</strong>, para várias coisas, inclusive isso, vamos importar</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" title="1"><span class="fu">&gt;</span> <span class="kw">import</span> <span class="dt">Control.Lens</span></a></code></pre></div>
+<pre><code>&gt; import Control.Lens</code></pre>
 <p>Agora podemos recuperar algumas informações, como ostatusdo response.</p>
 <pre><code>&gt; r ^. responseStatus
 &gt; Status {statusCode = 200, statusMessage = &quot;OK&quot;}</code></pre>
@@ -61,7 +61,7 @@
 <h3 id="o-projeto">O “projeto”</h3>
 <p>Vamos colocar isso em um arquivo para ficar mais simples editar:</p>
 <p><code>&gt; touch tougg-client.hs</code> Adicionei apenas o <code>import</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">import</span> <span class="dt">Network.Wreq</span></a></code></pre></div>
+<pre><code>import Network.Wreq</code></pre>
 <p>Salvei e:</p>
 <pre><code>&gt; haskellrun tougg-client.hs
 
