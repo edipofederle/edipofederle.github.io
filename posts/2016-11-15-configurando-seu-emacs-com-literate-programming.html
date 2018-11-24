@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Édipo Luis Féderle - Configurando seu Emacs com Literate Programming</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+              <a href="../">Édipo L. Féderle</a>
+            </div>
+            <nav>
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Configurando seu Emacs com Literate Programming</h1>
+            <article>
+    <section class="header">
+        Posted on March 25, 2017
+        
+    </section>
+    <section>
+        <p>Para quem ainda não ouviu falar, <a href="http://orgmode.org/">Org-mode</a> é um mode para <a href="https://www.gnu.org/software/emacs/">Emacs</a> que permite que você faça uma série de tarefas em texto puro, como por exemplo: manter TODO lists, planejar projetos, criar documentos e muito mais. Além disso você pode exportar para vários formatos, como PDF, HTML, txt, tex e outros. Sério, você pode fazer QUASE tudo com isso. O suporte a tabelas é simplesmente animal, de uma olhada.</p>
+<p>Esse post irá abordar como podemos executar código dentro de um documento .org e como usar isso para organizar as configurações do nosso Emacs.</p>
+<!-- more -->
+<p>Para começar vamos dando uma olhada em um documento .org:</p>
+<pre><code>* Introdução (tipo h1 no HTML)
+  Esse capítulo tem como objectivo explicar como
+  lançar um foguete para o *espaço*</code></pre>
+<p>** Contextualização (tipo h2 no HTML) Como você pode ver, é bem similar a um arquivo no formato Markdown. Assim como nesse formato, podemos introduzir um trecho de código:</p>
+<pre><code>   #+BEGIN_SRC ruby
+	 def fac(n)
+	   (1..n).inject(:*) || 1
+	 end
+   #+END_SRC</code></pre>
+<p>Veja um exemplo em execução:</p>
+<p><img src="https://www.dropbox.com/s/80ir5bcw1qrza21/org-mode-code.gif?raw=1" /></p>
+<p>Para inserir um novo bloco de código você pode digitar <code>&lt;s &lt;TAB&gt;</code> que será completado o restante para você. Após isso é preciso informar a linguagem, por exemplo, Ruby. Uma vez com o cursor dentro do bloco de código você pode ativar <code>C-'</code> para ir para o modo de inserção, e novamente <code>C-'</code> para salvar e sair.</p>
+<p>Isso é possível graças ao pacote <a href="http://orgmode.org/worg/org-contrib/babel/">babel</a>. Com ele você pode adicionar código (várias linguagens) dentro de um documento .org. Esse tipo de capacidade torna, forneceida pelo babel, torna Org-mode uma ferramenta poderosa para Literate Programming e Reproducible Research.</p>
+<p>O que nos leva a forma como vamos organizar a configuração do Emacs.</p>
+<h2 id="literate-emacs-initialization">Literate Emacs Initialization</h2>
+<p>Babel fornece uma função chamada org-babel-load-file que recebe um arquivo .org e processa os códigos em Emacs Lisp encontrados no mesmo.</p>
+<p>Dessa forma, tornando nossas configurações mais fáceis de entender e manter. Além disso, temos todas as funcionalidades presentes no Org-mode, como formatações, exportações, tags e muito mais.</p>
+<p>Algumas pessoas preferem separar em vários arquivos a configuração do Emacs, eu fazia isso até semana passada. Na realidade, existem algumas coisas onde o melhor mesmo é um único arquivo.</p>
+<p>Para começar usar isso na sua configuração, primeiro faça um backup do estado atual do seu .emacs.d (mv .emacs.d emacs.d.bkp) Feito isso, crie novamente o diretório, e adicione o arquivo init.d.</p>
+<pre><code>cd ~
+mkdir .emacs.d
+cd .emacs.d
+touch init.el</code></pre>
+<p>Aadicione a seguninte linha de Emacs Lisp no init.el</p>
+<pre class="emacs-lisp"><code>(org-babel-load-file &quot;~/.emacs.d/configurations.org&quot;)</code></pre>
+<p>Agora criei o arquivo configurations.org, dentro de .emacs.d, e adicione o seguinte:</p>
+<pre class="org-mode"><code>#+TITLE: My Emacs configurations
+
+* Basic UI Configurations
+  These customizations change the way emacs looks and disable/enable
+  some user interface elements.
+
+** Turn off the menu bar at the top of each frame because it's distracting
+
+ #+BEGIN_SRC emacs-lisp
+   (menu-bar-mode -1)
+ #+END_SRC
+
+** Don't show native OS scroll bars for buffers because they're redundant
+
+ #+BEGIN_SRC emacs-lisp
+   (when (fboundp 'tool-bar-mode)
+	 (tool-bar-mode -1))
+ #+END_SRC
+* Org-mode
+** Display preferences
+
+*** Bullets instead of a list of asterisks.
+
+   #+BEGIN_SRC emacs-lisp
+	  (add-hook 'org-mode-hook
+				(lambda ()
+				  (org-bullets-mode t)))
+   #+END_SRC
+
+*** A pretty arrow instead of the usual ellipsis (...)
+
+   #+BEGIN_SRC emacs-lisp
+	 (setq org-ellipsis &quot;⤵&quot;)
+   #+END_SRC
+
+*** Babel
+   Enable languages
+
+   #+BEGIN_SRC emacs-lisp
+	 (org-babel-do-load-languages
+	  'org-babel-load-languages '((ruby . t)))
+   #+END_SRC</code></pre>
+<p>Após salvar e reiniciar o emacs, você verá algo como:</p>
+<p><img src="https://www.dropbox.com/s/rxvvdbj5yas5tqc/conforg.png?raw=1" /></p>
+<p>OBS: Lembrando que na configuração acima usei um pacote que precisa estar instalados: org-bullets-mode.</p>
+<p>Seguindo esse padrão você pode estruturar sua configuração de uma forma muito descritiva e organizada. O arquivo configurations.org pode crescer bastante, dependendo de o quanto você customiza e configura novas coisas dentro do Emacs. Eu não vejo problema nisso, uma fez que no Org-mode podemos esconder as seções e deixar visível somente o necessário.</p>
+<p>Era isso, meu .emacs.d pode ser encontrado <a href="https://github.com/edipofederle/emacs.d">aqui</a>, caso lhe interesse. Se você gostou desse post, ou tiver qualquer colocação a fazer, fique a vontade em deixar um comentário ou enviar uma mensagem no Twitter (<span class="citation" data-cites="edipofederle">@edipofederle</span>).</p>
+<p>= paz</p>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
