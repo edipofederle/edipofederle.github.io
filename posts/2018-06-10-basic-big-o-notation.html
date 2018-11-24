@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Édipo Luis Féderle - The minimum you need knows about Big O Notation</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+              <a href="../">Édipo L. Féderle</a>
+            </div>
+            <nav>
+              <a href="../archive.html">Archive</a>
+              <a href="../academia.html">Academia</a>
+              <a href="../contact.html">Contact</a>
+              <a href="../about.html">About</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>The minimum you need knows about Big O Notation</h1>
+            <article>
+    <section class="header">
+        Posted on June 10, 2018
+        
+    </section>
+    <section>
+        <h1 id="the-minimum-you-need-knows-about-big-o-notation">The minimum you need knows about Big O Notation</h1>
+<p>Big O notation is one of the topics that most of us scare at first look. Well, this is a complex topic, if we look deeper, and from the mathematical side. This is important too, but for us, software developers/engineers, know the basics of this subject can be very useful, at least when I need to work with a huge quantity of data.</p>
+<p>This blog post aims to present the basics of this topic, in order to allow you to identify and correct choose the algorithms and data structures to resolve particular problems.</p>
+<p>We are going to use Ruby programming language to show the code examples, but the code is simple and you can translate into your favorite language if wish.</p>
+<h2 id="context">Context</h2>
+<p>The Big O notation is a fancy name used in Computer Science (CS) to describe the performance and/or complexity of an algorithm. Is important note that Big O always considers the worst-case scenario. It can be used to describe the execution time spent to execute a particular algorithm or the space used(memory or disk).</p>
+<h2 id="find-some-title">Find some title</h2>
+<p>We cover the most commons groups of complexity:</p>
+<ul>
+<li>Big O(1) - Constant</li>
+<li>Big O(n) - Linear</li>
+<li>Big O(nˆ2) - Quadratic</li>
+<li>Big O(2ˆn) - Exponential</li>
+<li>Big O(log N) - Logarithmic</li>
+</ul>
+<h2 id="o1---constant">O(1) - Constant</h2>
+<p>As the name says, that category of complexity will execute always at the same time or space, not matters the size of the input.</p>
+<p>Examples:</p>
+<h3 id="check-if-a-number-if-odd-or-even">Check if a number if odd or even</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">def</span> off_or_even?(number)</a>
+<a class="sourceLine" id="cb1-2" title="2">   number % <span class="dv">2</span> == <span class="dv">0</span> ? <span class="st">&quot;Even&quot;</span> : <span class="st">&quot;Odd&quot;</span></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">end</span></a></code></pre></div>
+<h3 id="look-up-into-a-hashtable">Look up into a HashTable</h3>
+<p>HashTables (HashMaps in Ruby) are great data structure and we can solve a bunch of problems using it. Look-up on a HashMap is also constant time.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" title="1">ratings_per_listing = {  <span class="st">&quot;12342&quot;</span> =&gt; <span class="dv">45</span>, <span class="st">&quot;65313&quot;</span> =&gt; <span class="dv">60</span>, <span class="st">&quot;45412&quot;</span> =&gt; <span class="dv">11</span>, <span class="st">&quot;12048&quot;</span> =&gt; <span class="dv">43</span> }</a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">def</span> ratings_per_month(ratings_per_listing, listing_id)</a>
+<a class="sourceLine" id="cb2-4" title="4">   ratings_per_listing[listing_id]</a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb2-6" title="6"></a>
+<a class="sourceLine" id="cb2-7" title="7">ratings_per_month(ratings_per_listing, <span class="st">&quot;12342&quot;</span>) <span class="co"># 45</span></a>
+<a class="sourceLine" id="cb2-8" title="8">ratings_per_month(ratings_per_listing, <span class="st">&quot;65313&quot;</span>) <span class="co"># 60</span></a></code></pre></div>
+<p>Again, no matters if the <code>ratings_per_listing</code> contains 4 elements or 5 million we always need just 1 instruction to get the result.</p>
+<p>We could, use another data-structure to store the data, lets say the most known data-structure: <strong>Array</strong>. We could store this data into a <strong>Array</strong> like this:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1">ratings_per_listing = [[<span class="st">&quot;12342&quot;</span>, <span class="dv">45</span>], [<span class="st">&quot;65313&quot;</span>, <span class="dv">60</span>], [<span class="st">&quot;45412&quot;</span>, <span class="dv">11</span>],</a>
+<a class="sourceLine" id="cb3-2" title="2">                       [<span class="st">&quot;12048&quot;</span>, <span class="dv">43</span>]]</a></code></pre></div>
+<p>Then we can write the following code to look-up on this <strong>Array</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">def</span> ratings_per_month(ratings_per_listing, listing_id)</a>
+<a class="sourceLine" id="cb4-2" title="2">  ratings_per_listing.each <span class="kw">do</span> |rating|</a>
+<a class="sourceLine" id="cb4-3" title="3">    <span class="kw">if</span> rating[<span class="dv">0</span>] == listing_id</a>
+<a class="sourceLine" id="cb4-4" title="4">      <span class="kw">return</span> rating[<span class="dv">1</span>]</a>
+<a class="sourceLine" id="cb4-5" title="5">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-6" title="6">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb4-7" title="7"><span class="kw">end</span></a></code></pre></div>
+<p>In the worst-case scenario, using the above algorithm, we need to execute the <code>if</code> statement the same times of the size of the input. Definitely not an ideal solution.</p>
+<p><strong>Note 1: Don’t fall into <em>one line</em> trap</strong></p>
+<p>Many people to believe that a single line of code means O(1). Please, don’t fool yourself, take this code has an example:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" title="1">arr.map(&amp;<span class="st">:even?</span>)</a></code></pre></div>
+<p>or</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb6-1" title="1">arr.sort</a></code></pre></div>
+<p>This is <em>just</em> one line of code, but Ruby internals need to do a lot of work to handle it for you. So, we need to be known the implementation. By the way, <a href="https://www.igvita.com/2009/03/26/ruby-algorithms-sorting-trie-heaps/">did you know which algorithm the <code>Array.sort</code>use ?</a></p>
+<p>So, long story short, know data-structures and which your <em>magic</em> one-liner code does behind the scenes.</p>
+<h2 id="big-on---linear">Big O(n) - Linear</h2>
+<p>This kind of algorithm applies the need of <em>visiting</em> ever each element of the input (in the worst-case scenario). So, this means that as the input grows, the time to complete execution is proportional to the input size.</p>
+<p>Examples:</p>
+<p>The most classic example here is to find a number on an unsorted <strong>Array</strong>:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">def</span> find_max_value(arr)</a>
+<a class="sourceLine" id="cb7-2" title="2">  max = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb7-3" title="3">  counter = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb7-4" title="4"></a>
+<a class="sourceLine" id="cb7-5" title="5">  arr.each <span class="kw">do</span> |value|</a>
+<a class="sourceLine" id="cb7-6" title="6">    <span class="kw">if</span> value &gt; max</a>
+<a class="sourceLine" id="cb7-7" title="7">      max = value</a>
+<a class="sourceLine" id="cb7-8" title="8">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-9" title="9">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb7-10" title="10"></a>
+<a class="sourceLine" id="cb7-11" title="11">  max</a>
+<a class="sourceLine" id="cb7-12" title="12"><span class="kw">end</span></a></code></pre></div>
+<p>In the worst-case scenario, we need <code>arr.size</code> execution to find the maximum value of the <code>arr</code> <strong>Array</strong>.</p>
+<p>If we can count the instruction (complexity), we have this:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">def</span> find_max_value(arr)</a>
+<a class="sourceLine" id="cb8-2" title="2">  max = <span class="dv">0</span>                       <span class="co"># &lt;= 1</span></a>
+<a class="sourceLine" id="cb8-3" title="3">  counter = <span class="dv">0</span>                   <span class="co"># &lt;= 1</span></a>
+<a class="sourceLine" id="cb8-4" title="4"></a>
+<a class="sourceLine" id="cb8-5" title="5">  arr.each <span class="kw">do</span> |value|           <span class="co"># &lt;= arr.size (n)</span></a>
+<a class="sourceLine" id="cb8-6" title="6">    counter = counter + <span class="dv">1</span>       <span class="co"># &lt;= 1</span></a>
+<a class="sourceLine" id="cb8-7" title="7">    <span class="kw">if</span> value &gt; max              <span class="co"># &lt;= 1</span></a>
+<a class="sourceLine" id="cb8-8" title="8">      max = value               <span class="co"># &lt;= 1</span></a>
+<a class="sourceLine" id="cb8-9" title="9">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-10" title="10">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb8-11" title="11"></a>
+<a class="sourceLine" id="cb8-12" title="12">  puts <span class="st">&quot;size: </span><span class="ot">#{</span>arr.size<span class="ot">}</span><span class="st">, executions: </span><span class="ot">#{</span>counter<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb8-13" title="13">  max</a>
+<a class="sourceLine" id="cb8-14" title="14"><span class="kw">end</span></a></code></pre></div>
+<p>So we have this: <code>2 + 3 * n</code>, follow the Asymptotic Analysis, we need to keep only the more significative terms, so we can keep only <code>n</code>, which give us O(n) complexity.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb9-1" title="1">find_max_value([<span class="dv">10</span>,<span class="dv">12</span>,<span class="dv">34</span>,<span class="dv">12</span>])</a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="st">size: </span><span class="dv">4</span>, <span class="st">executions: </span><span class="dv">4</span></a>
+<a class="sourceLine" id="cb9-3" title="3">=&gt; <span class="dv">34</span></a>
+<a class="sourceLine" id="cb9-4" title="4"></a>
+<a class="sourceLine" id="cb9-5" title="5">find_max_value([<span class="dv">10</span>,<span class="dv">12</span>,<span class="dv">34</span>,<span class="dv">12</span>,<span class="dv">15</span>,<span class="dv">50</span>,<span class="dv">391</span>,<span class="dv">59</span>,<span class="dv">19</span>,<span class="dv">50</span>])</a>
+<a class="sourceLine" id="cb9-6" title="6"><span class="st">size: </span><span class="dv">10</span>, <span class="st">executions: </span><span class="dv">10</span></a>
+<a class="sourceLine" id="cb9-7" title="7">=&gt; <span class="dv">391</span></a></code></pre></div>
+<p>As you can see, we include some extra output to let us see how many times the loop execute. If you plot a graph, we can see exactly the linear growth:</p>
+<p><img src="https://s3-us-west-2.amazonaws.com/personal-edipo/linear.png" /></p>
+<h3 id="onˆ2---qudratic">O(nˆ2) - Qudratic</h3>
+<p>In this kind of complexity, the growth rate will be <code>n^2</code>. This means that if your input dataset is size 2, it will execute 4 operations if the dataset is 4, 8 executions and soon on.</p>
+<p>Example:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">def</span> bubble_sort(arr)</a>
+<a class="sourceLine" id="cb10-2" title="2">  <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">0</span>..arr.size</a>
+<a class="sourceLine" id="cb10-3" title="3">    <span class="kw">for</span> j <span class="kw">in</span> (i + <span class="dv">1</span>..arr.size - <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb10-4" title="4">      <span class="kw">if</span>(arr[i] &gt; arr[j])</a>
+<a class="sourceLine" id="cb10-5" title="5">        arr[i], arr[j] = arr[j], arr[i]</a>
+<a class="sourceLine" id="cb10-6" title="6">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-7" title="7">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-8" title="8">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb10-9" title="9"></a>
+<a class="sourceLine" id="cb10-10" title="10">  arr</a>
+<a class="sourceLine" id="cb10-11" title="11"><span class="kw">end</span></a></code></pre></div>
+<p>The graph shows the growth of the <code>bubble_sort</code> function. As we can see, the number of executions grows very quickly.</p>
+<p><img src="https://s3-us-west-2.amazonaws.com/personal-edipo/quadratic.png" /></p>
+<p>Usually, when a function contains a single loop it is translated to constant time. and when the function contains two nested loops, it is translated to quadratic time.</p>
+<h2 id="big-o2ˆn---exponential">Big O(2ˆn) - Exponential</h2>
+<p>This kind of algorithm means that every time the input grows the executions performed double. One example of this kind of algorithm finds all subsets of a set (array here). Check out this code:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">def</span> subset(arr)</a>
+<a class="sourceLine" id="cb11-2" title="2">  total_number_of_subsets = <span class="dv">2</span> ** arr.size</a>
+<a class="sourceLine" id="cb11-3" title="3">  result = []</a>
+<a class="sourceLine" id="cb11-4" title="4"></a>
+<a class="sourceLine" id="cb11-5" title="5">  <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">0</span>..total_number_of_subsets <span class="kw">do</span></a>
+<a class="sourceLine" id="cb11-6" title="6">    subresult = []</a>
+<a class="sourceLine" id="cb11-7" title="7"></a>
+<a class="sourceLine" id="cb11-8" title="8">    <span class="kw">for</span> j <span class="kw">in</span> (<span class="dv">0</span>..arr.size - <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb11-9" title="9">      <span class="kw">if</span> i&amp;(<span class="dv">1</span> &lt;&lt; j) != <span class="dv">0</span></a>
+<a class="sourceLine" id="cb11-10" title="10">        subresult &lt;&lt; arr[j]</a>
+<a class="sourceLine" id="cb11-11" title="11">      <span class="kw">end</span></a>
+<a class="sourceLine" id="cb11-12" title="12">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb11-13" title="13">    result &lt;&lt; subresult</a>
+<a class="sourceLine" id="cb11-14" title="14">  <span class="kw">end</span></a>
+<a class="sourceLine" id="cb11-15" title="15"></a>
+<a class="sourceLine" id="cb11-16" title="16">  result</a>
+<a class="sourceLine" id="cb11-17" title="17"><span class="kw">end</span></a></code></pre></div>
+<p>If we plot a graph for this algorithm we can clearly notice how very quick this algorithm grows:</p>
+<p><img src="https://s3-us-west-2.amazonaws.com/personal-edipo/2%CB%86n.png" /></p>
+<p>You should try to avoid this kind of algorithm, if possible. As you can see at the graph, it does not scale very well.</p>
+<h2 id="olog-n---logarithmic">O(log N) - Logarithmic</h2>
+<p>The most common example of a logarithmic algorithm is the classic binary search. Once explain this type of category is a little difficult, let’s use that example to explore this kind of complexity.</p>
+<p>The binary search is a very efficient algorithm to find an element in a sorted array. The search is executed in steps, in each step we reduce the search space by half. After <code>cut</code> space if two, we selected the midpoint and test it against the search value. If the midpoint is <code>&lt;</code> then the search value, we only select the upper half of the input for the next step. We repeat this until found (or not found) the searched element.</p>
+<p>So, if we had an array of <code>n</code> elements, the linear solution will be O(n), and in the worst-case scenario, we will need <code>n</code> steps to find the target value. In other hands, a binary search has the complexity of O(log N). So let’s compare both solutions to search an element in an array of 1000 elements:</p>
+<p><strong>linear:</strong> - an average of 500 steps and 1000 in the worst-case scenario (we need consider the last one) <strong>logarithmic:</strong> - <code>log_2^1000</code> = about 10 steps.</p>
+<p>So, a HUGE difference.</p>
+<p>So, for this kind of algorithm, if we double the size of the input, we will have a little effect on algorithm growth. This kind of algorithm is very efficient when we need to deal with a large amount of data.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">def</span> binary_search(an_array, item)</a>
+<a class="sourceLine" id="cb12-2" title="2">    first = <span class="dv">0</span></a>
+<a class="sourceLine" id="cb12-3" title="3">    last = an_array.length - <span class="dv">1</span></a>
+<a class="sourceLine" id="cb12-4" title="4"></a>
+<a class="sourceLine" id="cb12-5" title="5">    <span class="kw">while</span> first &lt;= last</a>
+<a class="sourceLine" id="cb12-6" title="6">        i = (first + last) / <span class="dv">2</span></a>
+<a class="sourceLine" id="cb12-7" title="7"></a>
+<a class="sourceLine" id="cb12-8" title="8">        <span class="kw">if</span> an_array[i] == item</a>
+<a class="sourceLine" id="cb12-9" title="9">            <span class="kw">return</span> <span class="st">&quot;</span><span class="ot">#{</span>item<span class="ot">}</span><span class="st"> found at position </span><span class="ot">#{</span>i<span class="ot">}</span><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb12-10" title="10">        <span class="kw">elsif</span> an_array[i] &gt; item</a>
+<a class="sourceLine" id="cb12-11" title="11">            last = i - <span class="dv">1</span></a>
+<a class="sourceLine" id="cb12-12" title="12">        <span class="kw">elsif</span> an_array[i] &lt; item</a>
+<a class="sourceLine" id="cb12-13" title="13">            first = i + <span class="dv">1</span></a>
+<a class="sourceLine" id="cb12-14" title="14">        <span class="kw">else</span></a>
+<a class="sourceLine" id="cb12-15" title="15">            <span class="kw">return</span> <span class="st">&quot;</span><span class="ot">#{</span>item<span class="ot">}</span><span class="st"> not found in this array&quot;</span></a>
+<a class="sourceLine" id="cb12-16" title="16">        <span class="kw">end</span></a>
+<a class="sourceLine" id="cb12-17" title="17">    <span class="kw">end</span></a>
+<a class="sourceLine" id="cb12-18" title="18"><span class="kw">end</span></a></code></pre></div>
+<h1 id="conclusion">Conclusion</h1>
+<p>In this article, we cover the basics of Big O notation, but it would be enough to avoid some commons mistakes when writing programs. You can find more details about this subject in the following resources:</p>
+<ul>
+<li><a href="web.mit.edu/16.070/www/lecture/big_o.pdf">Big O notation - MIT</a></li>
+<li><a href="http://bigocheatsheet.com/">Know Thy Complexities!</a></li>
+</ul>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
