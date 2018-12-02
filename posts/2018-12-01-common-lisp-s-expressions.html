@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Édipo Luis Féderle - Common Lisp - S-expressions</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+              <a href="../">Édipo L. Féderle</a>
+            </div>
+            <nav>
+              <a href="../misc.html">Misc</a>
+              <a href="../academia.html">Academia</a>
+              <a href="../archive.html">Archive</a>
+              <a href="../contact.html">Contact</a>
+              <a href="../about.html">About</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Common Lisp - S-expressions</h1>
+            <div class="info">
+  Posted on December  2, 2018
+  
+</div>
+<div class="info">
+  
+  Tags: common lisp, lisp
+  
+</div>
+
+<h1 id="s-expressions">S-expressions</h1>
+<p>Exist two basics elements of an s-expressions: <em>lists</em> and <em>atoms</em>. To define a list we use parenteses, with any number of elements separated by whitespace.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb1-1" title="1">(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span>)</a></code></pre></div>
+<p>By other hand, <em>atoms</em> are everything else. There is a exception for it: a empty list <code>()</code> also written as <code>NIL</code> is both, an list and a atom. So the elements of the list, <code>1, 2, 3, 4</code> and <code>5</code> are s-expressions, so bassicaly atoms and nested lists.</p>
+<p>There also the comments, they aren’t considered s-expressions, they start with a semicolumn, and the compiler treat is bassicaly like whitespaces.</p>
+<p>In the rest of this post, lets see the most commonly used kinds of atoms, they are:</p>
+<ul>
+<li>numbers</li>
+<li>strings, and</li>
+<li>names</li>
+</ul>
+<h1 id="numebers">Numebers</h1>
+<p>Numebrs are straightfoward, so, any sequecence of digits, can include the sign <code>+</code> or <code>-</code>, the decimal point (<code>.</code>) or the <a href="https://en.wikipedia.org/wiki/Slash_(punctuation)">solidus</a> (<code>/</code>), examples:</p>
+<ul>
+<li>123 ; integer one hundred twenty-three</li>
+<li>3/7 ; the ratio three-sevenths</li>
+<li>2.0 ; the floating-point number two in default precision</li>
+<li>2.0e0 ; another way to write the same foating-point number</li>
+<li>2.0d0 ; the floating-point number two in ‘double’ precision</li>
+<li>1.Oe-4 ; the floating-point equivalent to one-thenn-thousandth</li>
+<li>+41 ; the integer forty-one</li>
+<li>-10 ; the integer negative ten</li>
+<li>-1/4 ; the ratio negative one-quarter</li>
+<li>-2/8 ; another way to represent negative one-quater</li>
+</ul>
+<p>These examples respresente many different numebrs: integers, rations, and floating point. Lisp also provide support for complex numbers, lets discuss it in other post.</p>
+<p>So, as you can see, there is different forms to represent same numbers, but internally they are the same objects.</p>
+<h1 id="strings">Strings</h1>
+<p>Strings literal, are represented as in other languages, using double qutoes</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb2-1" title="1"><span class="st">&quot;hello&quot;</span> <span class="co">; strings are composed with multiples characters</span></a></code></pre></div>
+<p>All names used in Lisp programs, such <code>FORMAT</code> or the name of function, like <code>full-name</code> are all represented by objects called <em>symbols</em>. You can use almost any character in a name, but not whitespaces. Digits also can appear in name, but it will not be interpreted as a number. Others characters that is used to other propose like double quotes, single quotes, backtick, comma, colon, semicolon, backslash and verical bars.</p>
+<p>One important thing regarding how the reader translate the names to symbols object is related with how it treats the case of letters in names and how the reader ensure that the same name is always read as the same symbol.</p>
+<p>While reading names, it will convert all unescaped characters in the name to uppercase, thats why when you define a function in REPL you will see the return in upper case:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb3-1" title="1">(<span class="kw">defun</span><span class="fu"> sum </span>(a b)</a>
+<a class="sourceLine" id="cb3-2" title="2">  (<span class="op">+</span> a b))</a>
+<a class="sourceLine" id="cb3-3" title="3"></a>
+<a class="sourceLine" id="cb3-4" title="4">SUM</a></code></pre></div>
+<p>The convension is the use names with hyphenated, like <code>hello-world</code>. Also for global variables is used like <em>NUMBER_OF_RETIRES</em>, <code>*</code> at the start and at the end. Constants start and end with <code>+</code>.</p>
+<h1 id="final-examples">Final examples</h1>
+<div class="sourceCode" id="cb4"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb4-1" title="1">a <span class="co">; the symbol a</span></a>
+<a class="sourceLine" id="cb4-2" title="2">() <span class="co">; the empty list</span></a>
+<a class="sourceLine" id="cb4-3" title="3">(<span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span>) <span class="co">; a list of three numebrs</span></a>
+<a class="sourceLine" id="cb4-4" title="4">(<span class="st">&quot;Hello&quot;</span>, <span class="st">&quot;World&quot;</span>) <span class="co">; a list of two strings</span></a>
+<a class="sourceLine" id="cb4-5" title="5">(a b c) <span class="co">; a list with three symbols</span></a>
+<a class="sourceLine" id="cb4-6" title="6">(x <span class="dv">1</span> <span class="st">&quot;foo&quot;</span>) <span class="co">; a list of a symbol, a number and a string</span></a>
+<a class="sourceLine" id="cb4-7" title="7">(<span class="op">+</span> (<span class="op">*</span> <span class="dv">2</span> <span class="dv">3</span>) <span class="dv">4</span>) <span class="co">; a list of a symbol, a list, and a number</span></a></code></pre></div>
+<p>And finally one more complete case, contains: four-item list with two symbols, an empty list, another list containing two symbols (<code>format</code> and <code>t</code>) and finnaly a string.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode lisp"><code class="sourceCode commonlisp"><a class="sourceLine" id="cb5-1" title="1">(<span class="kw">defun</span><span class="fu"> greeter </span>()</a>
+<a class="sourceLine" id="cb5-2" title="2">  (<span class="kw">format</span> <span class="kw">t</span> <span class="st">&quot;Good Morning&quot;</span>))</a></code></pre></div>
+<p>Thats all for now, in the next post we will talk about s-expressions as lisp forms. See you soon.</p>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
