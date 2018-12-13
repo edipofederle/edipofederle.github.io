@@ -74,18 +74,18 @@
 <a class="sourceLine" id="cb2-9" title="9">comp(add_one, multi_three).call(<span class="dv">10</span>) <span class="co"># 31</span></a>
 <a class="sourceLine" id="cb2-10" title="10">comp(add_one, multi_three).call(<span class="dv">11</span>) <span class="co"># 34</span></a></code></pre></div>
 <p>If we need to receive 4 functions, we will need to do something like:</p>
-<pre><code>def comp(f1, f2, f3, f4)
-  lambda { |x| f1.call(f2.call(f3.call(f4.call(x)))) }
-end</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">def</span> comp(f1, f2, f3, f4)</a>
+<a class="sourceLine" id="cb3-2" title="2">  lambda { |x| f1.call(f2.call(f3.call(f4.call(x)))) }</a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="kw">end</span></a></code></pre></div>
 <p>And so on, this looks like a good case for use a <code>reduce</code> function, let’s try it:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">def</span> comp(*fns)</a>
 <a class="sourceLine" id="cb4-2" title="2"> fns.reduce { |func, func2| lambda { |n| func.call(func2.call(n))  }}</a>
 <a class="sourceLine" id="cb4-3" title="3"><span class="kw">end</span></a></code></pre></div>
 <p>If you look at Clojure <code>comp</code> <a href="https://github.com/clojure/clojure/blob/clojure-1.9.0/src/clj/clojure/core.clj#L2549">function implemtation</a>, you will see that it also use some reduce stuff to do the job.</p>
 <p>So, basically, the idea here is to use lambda and pass it to a <code>comp</code> function. Let’s try to change it to be possible to use any number of functions. This is a case to use the <code>splat</code> operator (*), so let’s rewrite the function <code>comp</code> using it:</p>
-<pre><code>def compose(*fns)
-  lambda { |x| f1.call(f2.call(x)) }
-end</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">def</span> compose(*fns)</a>
+<a class="sourceLine" id="cb5-2" title="2">  lambda { |x| f1.call(f2.call(x)) }</a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="kw">end</span></a></code></pre></div>
 <h2 id="references">References</h2>
 <ul>
 <li>https://www.joinhandshake.com/engineering/2016/01/22/functional-aspects-of-ruby.html</li>
