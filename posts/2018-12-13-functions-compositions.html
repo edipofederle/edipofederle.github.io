@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Édipo Luis Féderle - Functions Compositions</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+              <a href="../">Édipo L. Féderle</a>
+            </div>
+            <nav>
+              <a href="../misc.html">Misc</a>
+              <a href="../academia.html">Academia</a>
+              <a href="../archive.html">Archive</a>
+              <a href="../contact.html">Contact</a>
+              <a href="../about.html">About</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Functions Compositions</h1>
+            <div class="info">
+  Posted on December 13, 2018
+  
+</div>
+<div class="info">
+  
+  Tags: ruby,clojure, functional programming
+  
+</div>
+
+<p>Ruby as a lot of things from Functional Programming (FP), we all use stuffs such <code>lambdas</code>, <code>procs</code>, and so on. Recently I was thinking about one aspect of FP: functions compositions. If you look at mathematics definition:</p>
+<blockquote>
+<p>In mathematics, function composition is the pointwise application of one function to the result of another to produce a third function. For instance, the functions f : X → Y and g : Y → Z can be composed to yield a function which maps x in X to g(f(x)) in Z. (Wikipedia)</p>
+</blockquote>
+<p>And in programming is basically the same. In Clojure, for example, we have a function called <code>comp</code>. Let’s open the REPL and play with it.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb1-1" title="1"></a>
+<a class="sourceLine" id="cb1-2" title="2">user=&gt; (<span class="kw">doc</span> <span class="kw">comp</span>)</a>
+<a class="sourceLine" id="cb1-3" title="3">-------------------------</a>
+<a class="sourceLine" id="cb1-4" title="4">clojure.core/comp</a>
+<a class="sourceLine" id="cb1-5" title="5">([] [f] [f g] [f g &amp; fs])</a>
+<a class="sourceLine" id="cb1-6" title="6">  Takes a <span class="kw">set</span> of functions <span class="kw">and</span> returns a <span class="kw">fn</span> that <span class="kw">is</span> the composition</a>
+<a class="sourceLine" id="cb1-7" title="7">  of those fns.  The returned <span class="kw">fn</span> takes a variable number of args,</a>
+<a class="sourceLine" id="cb1-8" title="8">  applies the <span class="kw">rightmost</span> of fns to the args, the <span class="kw">next</span></a>
+<a class="sourceLine" id="cb1-9" title="9">  <span class="kw">fn</span> (right-to-left) to the result, etc.</a>
+<a class="sourceLine" id="cb1-10" title="10"><span class="va">nil</span></a>
+<a class="sourceLine" id="cb1-11" title="11"></a>
+<a class="sourceLine" id="cb1-12" title="12">user=&gt; (<span class="bu">defn</span><span class="fu"> add</span>_one [x] (<span class="kw">inc</span> x))</a>
+<a class="sourceLine" id="cb1-13" title="13"><span class="va">#'user/add_one</span></a>
+<a class="sourceLine" id="cb1-14" title="14">user=&gt; (<span class="bu">defn</span><span class="fu"> multi</span>_<span class="dv">3</span> [x] (<span class="kw">*</span> <span class="dv">3</span> x))</a>
+<a class="sourceLine" id="cb1-15" title="15"><span class="va">#'user/multi_3</span></a>
+<a class="sourceLine" id="cb1-16" title="16"></a>
+<a class="sourceLine" id="cb1-17" title="17">user=&gt; ((<span class="kw">comp</span> add_one multi_<span class="dv">3</span>) <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb1-18" title="18"><span class="dv">31</span></a>
+<a class="sourceLine" id="cb1-19" title="19">user=&gt; ((<span class="kw">comp</span> add_one multi_<span class="dv">3</span>) <span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb1-20" title="20"><span class="dv">31</span></a>
+<a class="sourceLine" id="cb1-21" title="21">user=&gt;</a></code></pre></div>
+<p>So, we can pass any set of functions to <code>comp</code> and a return we will get a function that is the composition of all these functions.</p>
+<p>But what about Ruby? Well, ruby doesn’t contain a built-in <code>comp</code> function, but we can write one.</p>
+<p>Ruby allow us to pass a function as an argument and return function as well, using a fancy word, higher-order functions. If a language has this capacity, we say that it has first-class function support. In order to implement a <code>comp</code> function in Ruby is exactly what we need.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb2-1" title="1"></a>
+<a class="sourceLine" id="cb2-2" title="2">add_one = lambda { |number| number + <span class="dv">1</span> }</a>
+<a class="sourceLine" id="cb2-3" title="3">multi_three = lambda { |number|  number * <span class="dv">3</span> }</a>
+<a class="sourceLine" id="cb2-4" title="4"></a>
+<a class="sourceLine" id="cb2-5" title="5"><span class="kw">def</span> comp(f1, f2)</a>
+<a class="sourceLine" id="cb2-6" title="6">  lambda { |x| f1.call(f2.call(x)) }</a>
+<a class="sourceLine" id="cb2-7" title="7"><span class="kw">end</span></a>
+<a class="sourceLine" id="cb2-8" title="8"></a>
+<a class="sourceLine" id="cb2-9" title="9">comp(add_one, multi_three).call(<span class="dv">10</span>) <span class="co"># 31</span></a>
+<a class="sourceLine" id="cb2-10" title="10">comp(add_one, multi_three).call(<span class="dv">11</span>) <span class="co"># 34</span></a></code></pre></div>
+<p>If we need to receive 4 functions, we will need to do something like:</p>
+<pre><code>def comp(f1, f2, f3, f4)
+  lambda { |x| f1.call(f2.call(f3.call(f4.call(x)))) }
+end</code></pre>
+<p>And so on, this looks like a good case for use a <code>reduce</code> function, let’s try it:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode ruby"><code class="sourceCode ruby"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">def</span> comp(*fns)</a>
+<a class="sourceLine" id="cb4-2" title="2"> fns.reduce { |func, func2| lambda { |n| func.call(func2.call(n))  }}</a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="kw">end</span></a></code></pre></div>
+<p>If you look at Clojure <code>comp</code> <a href="https://github.com/clojure/clojure/blob/clojure-1.9.0/src/clj/clojure/core.clj#L2549">function implemtation</a>, you will see that it also use some reduce stuff to do the job.</p>
+<p>So, basically, the idea here is to use lambda and pass it to a <code>comp</code> function. Let’s try to change it to be possible to use any number of functions. This is a case to use the <code>splat</code> operator (*), so let’s rewrite the function <code>comp</code> using it:</p>
+<pre><code>def compose(*fns)
+  lambda { |x| f1.call(f2.call(x)) }
+end</code></pre>
+<h2 id="references">References</h2>
+<ul>
+<li>https://www.joinhandshake.com/engineering/2016/01/22/functional-aspects-of-ruby.html</li>
+<li>https://github.com/clojure/clojure/blob/clojure-1.9.0/src/clj/clojure/core.clj#L2549</li>
+</ul>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
