@@ -37,22 +37,24 @@
 <p>So, recently I starting working with Python/Django, come from a Ruby/Rails background, I decide keep notes about some points. So here we go:</p>
 <p><strong>NOTE:</strong> I will keep this post updated as I figure out new things.</p>
 <ul>
-<li>Use <code>[object.pk](http://object.pk)</code> instead of <code>object.id</code>
-<ul>
-<li>why: some models don’t follow the rule of use <code>id</code> as the primary key. So always use <code>.pk</code> in order to get the correct primary key</li>
-</ul></li>
-<li><p>Run single test case: <code>./manage.py test app.tests.test_helper</code></p></li>
-<li><p>Tests: mocks</p>
-<p>Inform the path from where the method is called. In this case, the method <code>foo_bar</code> is used inside the <code>my_app</code> helper.</p></li>
+<li>Use <code>pk</code> instead of <code>id</code></li>
 </ul>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" title="1"><span class="at">@mock.patch</span>(<span class="st">'my_app.helpers.foo_bar'</span>, return_value<span class="op">=</span><span class="dv">10</span>)</a></code></pre></div>
-<p>If is a object related method, use: python mock.patch.object(Object, ‘foo_bar’) ```</p>
+<p>Some models don’t follow the rule of use <code>id</code> as the primary key. So always use <code>.pk</code> in order to get the correct primary key</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" title="1"><span class="bu">object</span>.pk</a></code></pre></div>
+<ul>
+<li><p>Run single test case: <code>./manage.py test app.tests.test_helper</code></p></li>
+<li><p>Tests: mocks</p></li>
+</ul>
+<p>Inform the path from where the method is called. In this case, the method <code>foo_bar</code> is used inside the <code>my_app</code> helper.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1"><span class="at">@mock.patch</span>(<span class="st">'my_app.helpers.foo_bar'</span>, return_value<span class="op">=</span><span class="dv">10</span>)</a></code></pre></div>
+<p>If is a object related method, use:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" title="1">mock.patch.<span class="bu">object</span>(Object, <span class="st">'foo_bar'</span>)</a></code></pre></div>
 <p>You can also use <code>return_value</code> if you need</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1"> mock.return_value <span class="op">=</span> some_thing</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb4-1" title="1"> mock.return_value <span class="op">=</span> some_thing</a></code></pre></div>
 <ul>
 <li>Refresh object from DB</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" title="1">obj.refresh_from_db()</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" title="1">obj.refresh_from_db()</a></code></pre></div>
 
     </main>
 
