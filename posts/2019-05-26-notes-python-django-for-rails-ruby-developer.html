@@ -45,15 +45,14 @@
 <li><p>Tests: mocks</p>
 <p>Inform the path from where the method is called. In this case, the method <code>foo_bar</code> is used inside the <code>my_app</code> helper.</p></li>
 </ul>
-<pre><code>@mock.patch('my_app.helpers.foo_bar', return_value=10)</code></pre>
-<p>If is a object related method, use:</p>
-<pre><code>mock.patch.object(Object, 'foo_bar')</code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb1-1" title="1"><span class="at">@mock.patch</span>(<span class="st">'my_app.helpers.foo_bar'</span>, return_value<span class="op">=</span><span class="dv">10</span>)</a></code></pre></div>
+<p>If is a object related method, use: python mock.patch.object(Object, ‘foo_bar’) ```</p>
 <p>You can also use <code>return_value</code> if you need</p>
-<pre><code> mock.return_value = some_thing</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb2-1" title="1"> mock.return_value <span class="op">=</span> some_thing</a></code></pre></div>
 <ul>
 <li>Refresh object from DB</li>
 </ul>
-<pre><code>obj.refresh_from_db()</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb3-1" title="1">obj.refresh_from_db()</a></code></pre></div>
 
     </main>
 
