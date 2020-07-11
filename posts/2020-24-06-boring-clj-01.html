@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Édipo Luis Féderle - Boring Clojure - Routing with Ring</title>
+    <link rel="stylesheet" href="../css/default.css" />
+    <link rel="stylesheet" href="../css/syntax.css" />
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        <a href="../">Édipo L. Féderle</a>
+      </div>
+      <nav>
+        <a href="../misc.html">Misc</a>
+        <a href="../academia.html">Academia</a>
+        <a href="../archive.html">Archive</a>
+        <a href="../contact.html">Contact</a>
+        <a href="../about.html">About</a>
+      </nav>
+    </header>
+
+    <main role="main">
+      <h1>Boring Clojure - Routing with Ring</h1>
+      <div class="info">
+  Posted on July 11, 2020
+  
+</div>
+<div class="info">
+  
+  Tags: clojure, programming, web, routing
+  
+</div>
+
+<p>Hi,</p>
+<p>Recently I starting to think about trying to make a series of posts called ‘Boring Clojure’. My main goal here is to try to put together commons pieces of code that we always find in every web software, things like routing, rendering HTML, authentication, authorization, etc. As a first post, I would like to discuss Routing using Ring library.</p>
+<p>The main reason to start with Ring, instead of Compujure, for instance, is the Ring is a low abstraction of HTTP details, which give us a better view on how things works, and also will provide us some basics fundaments that will be very useful when moving to a more high-level routing library like Compojure.</p>
+<p>Ring abstract HTTP details into a simple, unified API, Ring is inspired by Python’s WSGI and Ruby’s Rack. The Ring library is divided into four other libraries:</p>
+<ul>
+<li>ring-core - essential functions for handling parameters, cookies and more</li>
+<li>ring-devel - functions for developing and debugging Ring applications</li>
+<li>ring-servlet - construct Java servlets from Ring handlers</li>
+<li>ring-jetty-adapter - a Ring adapter that uses the Jetty Webserver</li>
+</ul>
+<h2 id="new-project">New Project</h2>
+<p>Lets starting exploring Ring by creating a new Clojure project and add it as a dependency.</p>
+<pre><code>lein new boring-clj</code></pre>
+<p>Open the <code>project.clj</code> file and add the ring as a dependency, our file should look like this:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb2-1" title="1">(defproject boring-clj <span class="st">&quot;0.1.0-SNAPSHOT&quot;</span></a>
+<a class="sourceLine" id="cb2-2" title="2">  <span class="at">:description</span> <span class="st">&quot;FIXME: write description&quot;</span></a>
+<a class="sourceLine" id="cb2-3" title="3">  <span class="at">:url</span> <span class="st">&quot;http://example.com/FIXME&quot;</span></a>
+<a class="sourceLine" id="cb2-4" title="4">  <span class="at">:license</span> {<span class="at">:name</span> <span class="st">&quot;EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0&quot;</span></a>
+<a class="sourceLine" id="cb2-5" title="5">            <span class="at">:url</span> <span class="st">&quot;https://www.eclipse.org/legal/epl-2.0/&quot;</span>}</a>
+<a class="sourceLine" id="cb2-6" title="6">  <span class="at">:dependencies</span> [[org.clojure/clojure <span class="st">&quot;1.10.1&quot;</span>]</a>
+<a class="sourceLine" id="cb2-7" title="7">                 [ring <span class="st">&quot;1.8.1&quot;</span>] <span class="co">;; includes all ring libraries, like described above</span></a>
+<a class="sourceLine" id="cb2-8" title="8">                 ]</a>
+<a class="sourceLine" id="cb2-9" title="9">)</a></code></pre></div>
+<p>To download the dependencies, run <code>lein deps</code>. All setup, we are ready to go.</p>
+<h2 id="ring-as-the-basis-for-your-web-application">Ring as the basis for your web application</h2>
+<p>We have some nice benefits by choose Ring as routing library, such:</p>
+<ul>
+<li>Write your application using Clojure functions and maps</li>
+<li>Run your application in an auto-reloading development server</li>
+<li>Compile your application into a Java servlet (ENTER.PRI.ZE :d)</li>
+<li>Package your application into a Java war file (ENTER.PRI.ZE :d)</li>
+<li>Take advantage of a large selection of pre-written middleware</li>
+<li>Deploy your application in cloud environments like Amazon Elastic Beanstalk and Heroku</li>
+</ul>
+<p>(source: https://github.com/ring-clojure/ring/wiki/Why-Use-Ring%3F)</p>
+<p>Ring is the basement for much more high-level routing libraries, such Compojure. Once my idea here is to start from basics and try to not confusing the reading in a lot of abstraction, let’s forget about Compojure, for now.</p>
+<h2 id="core-concepts">Core Concepts</h2>
+<p>The four components of a ring are:</p>
+<h3 id="handler">Handler</h3>
+<p>Are functions that compute the response for a request made on an endpoint. Your application is defined in terms of <code>handlers</code>, they can be synchronous(most commons) and asynchronous.</p>
+<p>The synchronous handler takes one argument (<code>request</code>), and as a function body, we define a map request representation, which Ring can translate into an HTTP response.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb3-1" title="1">(<span class="bu">defn</span><span class="fu"> site </span>[request]</a>
+<a class="sourceLine" id="cb3-2" title="2">  {<span class="at">:status</span> <span class="dv">200</span></a>
+<a class="sourceLine" id="cb3-3" title="3">   <span class="at">:headers</span> {<span class="st">&quot;Content-Type&quot;</span> <span class="st">&quot;text/plain&quot;</span>}</a>
+<a class="sourceLine" id="cb3-4" title="4">   <span class="at">:body</span> <span class="st">&quot;Hello Clojure, Hello Ring!&quot;</span>})</a></code></pre></div>
+<p>Let’s run this handle to see more concrete things. Add the <code>site</code> function to <code>src/core.clj</code>, your <code>core.clj</code> should looks like this:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb4-1" title="1">(<span class="kw">ns</span> auth<span class="fl">-01.</span>core</a>
+<a class="sourceLine" id="cb4-2" title="2">  (<span class="at">:require</span></a>
+<a class="sourceLine" id="cb4-3" title="3">   [ring.adapter.jetty <span class="at">:as</span> jetty]))</a>
+<a class="sourceLine" id="cb4-4" title="4"></a>
+<a class="sourceLine" id="cb4-5" title="5">(<span class="bu">defn</span><span class="fu"> site </span>[request]</a>
+<a class="sourceLine" id="cb4-6" title="6">  {<span class="at">:status</span> <span class="dv">200</span></a>
+<a class="sourceLine" id="cb4-7" title="7">   <span class="at">:headers</span> {<span class="st">&quot;Content-Type&quot;</span> <span class="st">&quot;text/plain&quot;</span>}</a>
+<a class="sourceLine" id="cb4-8" title="8">   <span class="at">:body</span> <span class="st">&quot;Hello Ring!&quot;</span>})</a>
+<a class="sourceLine" id="cb4-9" title="9"></a>
+<a class="sourceLine" id="cb4-10" title="10">(<span class="bu">defn</span><span class="fu"> -main</span></a>
+<a class="sourceLine" id="cb4-11" title="11">  [&amp; [port]]</a>
+<a class="sourceLine" id="cb4-12" title="12">  (<span class="kw">if</span> port</a>
+<a class="sourceLine" id="cb4-13" title="13">    (jetty/run-jetty <span class="va">#'site</span> {<span class="at">:port</span> (Integer. port)})</a>
+<a class="sourceLine" id="cb4-14" title="14">    (<span class="kw">println</span> <span class="st">&quot;No port specified, exiting.&quot;</span>)))</a></code></pre></div>
+<p>We need one last update to run the application, open the <code>project.clj</code> and edit it to looks like it:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb5-1" title="1">(defproject boring-clj <span class="st">&quot;0.1.0-SNAPSHOT&quot;</span></a>
+<a class="sourceLine" id="cb5-2" title="2">  <span class="at">:description</span> <span class="st">&quot;FIXME: write description&quot;</span></a>
+<a class="sourceLine" id="cb5-3" title="3">  <span class="at">:url</span> <span class="st">&quot;http://example.com/FIXME&quot;</span></a>
+<a class="sourceLine" id="cb5-4" title="4">  <span class="at">:license</span> {<span class="at">:name</span> <span class="st">&quot;EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0&quot;</span></a>
+<a class="sourceLine" id="cb5-5" title="5">            <span class="at">:url</span> <span class="st">&quot;https://www.eclipse.org/legal/epl-2.0/&quot;</span>}</a>
+<a class="sourceLine" id="cb5-6" title="6">  <span class="at">:dependencies</span> [[org.clojure/clojure <span class="st">&quot;1.10.1&quot;</span>]</a>
+<a class="sourceLine" id="cb5-7" title="7">                 [ring <span class="st">&quot;1.8.1&quot;</span>]]</a>
+<a class="sourceLine" id="cb5-8" title="8"></a>
+<a class="sourceLine" id="cb5-9" title="9">  <span class="at">:main</span> boring.clj.core</a>
+<a class="sourceLine" id="cb5-10" title="10">  <span class="at">:ring</span> {<span class="at">:handler</span> boring-clj.core/site</a>
+<a class="sourceLine" id="cb5-11" title="11">         <span class="at">:init</span> boring-clj.core/init}</a>
+<a class="sourceLine" id="cb5-12" title="12">  <span class="at">:repl-options</span> {<span class="at">:init-ns</span> boring-clj.core})</a></code></pre></div>
+<p>NOTE 1: Note the <code>-main</code> function is the entry point to our app. The <code>-</code> in the front of the name does not have any effect on the function behavior, is just a convention.</p>
+<p>Now just execute <code>lein run 3000</code> and access http://localhost:3001/</p>
+<h3 id="request">Request</h3>
+<p>So, we already see that HTTP requests are plain Clojure maps, in a ‘standard’ request, we will always have some keys present, which are:</p>
+<ul>
+<li><p>:server-port The port on which the request is being handled.</p></li>
+<li><p>:server-name The resolved server name, or the server IP address.</p></li>
+<li><p>:remote-addr The IP address of the client or the last proxy that sent the request.</p></li>
+<li><p>:uri The request URI (the full path after the domain name).</p></li>
+<li><p>:query-string The query string, if present.</p></li>
+<li><p>:scheme The transport protocol, either :http or :https.</p></li>
+<li><p>:request-method The HTTP request method, which is one of :get, :head, :options, :put, :post, or :delete.</p></li>
+<li><p>:headers A Clojure map of lowercase header name strings to corresponding header value strings.</p></li>
+<li><p>:body An <code>InputStream</code> for the request body, if present.</p></li>
+</ul>
+<p>As we will see next, there some keys that are added by Middlewares as well.</p>
+<h3 id="response">Response</h3>
+<p>Before we see that responses are created by handlers, and also are represented by Clojure in the form of:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb6-1" title="1">{<span class="at">:status</span> <span class="dv">200</span></a>
+<a class="sourceLine" id="cb6-2" title="2"> <span class="at">:headers</span> {<span class="st">&quot;Content-Type&quot;</span> <span class="st">&quot;text/plain&quot;</span>}</a>
+<a class="sourceLine" id="cb6-3" title="3"> <span class="at">:body</span> <span class="st">&quot;Hello Clojure, Hello Ring!&quot;</span>})</a></code></pre></div>
+<p>Let’s see key by key:</p>
+<ul>
+<li><p>:status The HTTP status code, such as 200, 302, 404 etc. (<a href="https://www.restapitutorial.com/httpstatuscodes.html">check here for complete statuses code list</a>)</p></li>
+<li><p>:headers A Clojure map of HTTP header names to header values. These values may either be strings, in which case one name/value header will be sent in the HTTP response, or a collection of strings, in which case a name/value header will be sent for each value.</p></li>
+<li><p>:body A representation of the response body, if a response body is appropriate for the response’s status code. The body can be one of four types:</p></li>
+<li><p>String The body is sent directly to the client.</p></li>
+<li><p><a href="https://clojure.org/reference/sequences">ISeq</a> Each element of the seq is sent to the client as a string.</p></li>
+<li><p>File The contents of the referenced file is sent to the client.</p></li>
+<li><p><a href="https://clojuredocs.org/clojure.java.io/input-stream">InputStream</a> The contents of the stream is sent to the client. When the stream is exhausted, the stream is closed.</p></li>
+</ul>
+<h3 id="middleware">Middleware</h3>
+<p>As told above, we can add functionality to handlers using Middlewares. Middleware is higher-level functions that allow us to add additional functionality to handlers:</p>
+<p>For instance, let’s add the content type to the response:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb7-1" title="1">(<span class="bu">defn</span><span class="fu"> wrap-content-type </span>[handler content-type]</a>
+<a class="sourceLine" id="cb7-2" title="2">  (<span class="kw">fn</span> [request]</a>
+<a class="sourceLine" id="cb7-3" title="3">    (<span class="kw">let</span> [response (handler request)]</a>
+<a class="sourceLine" id="cb7-4" title="4">      (<span class="kw">assoc-in</span> response [<span class="at">:headers</span> <span class="st">&quot;Content-Type&quot;</span>] content-type))))</a></code></pre></div>
+<p>As you can see, the first argument of a middleware function is the handle itself, and the rest is anything you middleware function need to do the job. The return should be a new handler function that will call the original handler. Let’s put this in the <code>core.clj</code> file and test to see if it works as expected:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb8-1" title="1"></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="co">;; site function now uses the `wrap-content-type`</span></a>
+<a class="sourceLine" id="cb8-3" title="3"><span class="co">;; Middle are to include the content-type in the HTTP response</span></a>
+<a class="sourceLine" id="cb8-4" title="4">(<span class="bu">defn</span><span class="fu"> site </span>[request]</a>
+<a class="sourceLine" id="cb8-5" title="5">  (wrap-content-type (<span class="kw">fn</span> [] {<span class="at">:status</span> <span class="dv">200</span></a>
+<a class="sourceLine" id="cb8-6" title="6">                             <span class="at">:body</span> <span class="st">&quot;Hello Ring!&quot;</span>})))</a>
+<a class="sourceLine" id="cb8-7" title="7"></a>
+<a class="sourceLine" id="cb8-8" title="8">(<span class="bu">defn</span><span class="fu"> wrap-content-type </span>[handler content-type]</a>
+<a class="sourceLine" id="cb8-9" title="9">  (<span class="kw">fn</span> [request]</a>
+<a class="sourceLine" id="cb8-10" title="10">    (<span class="kw">let</span> [response (handler request)]</a>
+<a class="sourceLine" id="cb8-11" title="11">      (<span class="kw">assoc-in</span> response [<span class="at">:headers</span> <span class="st">&quot;Content-Type&quot;</span>] content-type))))</a></code></pre></div>
+<p>We can test it in curl:</p>
+<pre><code>curl -s -I http://localhost:3000/
+HTTP/1.1 200 OK
+Date: Wed, 01 Jul 2020 13:30:00 GMT
+Content-Type: text/plain
+Transfer-Encoding: chunked
+Server: Jetty(9.4.28.v20200408)</code></pre>
+<p>There are some conventions regarding functions names while play with middlewares: if the middleware function name is, for instance, <code>wrap-content-type</code> the helpers function to operate on the requests/response should be called <code>content-type-response</code> and <code>content-type-request</code>, so in our case, we need something like:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb10-1" title="1">(<span class="bu">defn</span><span class="fu"> site </span>[request]</a>
+<a class="sourceLine" id="cb10-2" title="2">  {<span class="at">:status</span> <span class="dv">200</span></a>
+<a class="sourceLine" id="cb10-3" title="3">   <span class="at">:body</span> <span class="st">&quot;&lt;h1&gt;Hello Ring&lt;/h1&gt;&quot;</span>})</a>
+<a class="sourceLine" id="cb10-4" title="4"></a>
+<a class="sourceLine" id="cb10-5" title="5">(<span class="bu">defn</span><span class="fu"> content-type-response </span>[response content-type]</a>
+<a class="sourceLine" id="cb10-6" title="6">  (<span class="kw">assoc-in</span> response [<span class="at">:headers</span> <span class="st">&quot;Content-Type&quot;</span>] content-type))</a>
+<a class="sourceLine" id="cb10-7" title="7"></a>
+<a class="sourceLine" id="cb10-8" title="8"></a>
+<a class="sourceLine" id="cb10-9" title="9">(<span class="bu">defn</span><span class="fu"> wrap-content-type </span>[handler content-type]</a>
+<a class="sourceLine" id="cb10-10" title="10">  (<span class="kw">fn</span></a>
+<a class="sourceLine" id="cb10-11" title="11">    ([request]</a>
+<a class="sourceLine" id="cb10-12" title="12">     (<span class="kw">-&gt;</span> (handler request) (content-type-response content-type)))))</a>
+<a class="sourceLine" id="cb10-13" title="13"></a>
+<a class="sourceLine" id="cb10-14" title="14">(<span class="bu">def</span><span class="fu"> my-app</span></a>
+<a class="sourceLine" id="cb10-15" title="15">  (wrap-content-type site <span class="st">&quot;text/html&quot;</span>))</a>
+<a class="sourceLine" id="cb10-16" title="16"></a>
+<a class="sourceLine" id="cb10-17" title="17">(<span class="bu">defn</span><span class="fu"> -main</span></a>
+<a class="sourceLine" id="cb10-18" title="18">  [&amp; [port]]</a>
+<a class="sourceLine" id="cb10-19" title="19">  (<span class="kw">if</span> port</a>
+<a class="sourceLine" id="cb10-20" title="20">    (jetty/run-jetty <span class="va">#'my-app</span> {<span class="at">:port</span> (Integer. port)})</a>
+<a class="sourceLine" id="cb10-21" title="21">    (<span class="kw">println</span> <span class="st">&quot;No port specified, exiting.&quot;</span>)))</a></code></pre></div>
+<p>Run the server and you should see some nice and beautiful HTML rendered.</p>
+<h3 id="responses">Responses</h3>
+<p>Of course, to build the most basic app, we need a response too. As we see previous, a response is plain Clojure Maps and we can build it easily, but Ring also provides to us some util function to make the life even easier, let’s play in the REPL:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb11-1" title="1">(<span class="kw">use</span> '[ring.util.response <span class="at">:as</span></a>
+<a class="sourceLine" id="cb11-2" title="2"></a>
+<a class="sourceLine" id="cb11-3" title="3">auth<span class="fl">-01.</span>core&gt; (response <span class="st">&quot;Hello Ring&quot;</span> )</a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="co">;; {:status 200, :headers {}, :body &quot;Hello Ring&quot;}</span></a>
+<a class="sourceLine" id="cb11-5" title="5"></a>
+<a class="sourceLine" id="cb11-6" title="6">(content-type (response <span class="st">&quot;Hello Ring&quot;</span>) <span class="st">&quot;text/plain&quot;</span>)</a>
+<a class="sourceLine" id="cb11-7" title="7"><span class="co">;; {:status 200, :headers {&quot;Content-Type&quot; &quot;text/plain&quot;}, :body &quot;Hello World&quot;}</span></a></code></pre></div>
+<p>There some more utils function that you can check <a href="http://ring-clojure.github.io/ring/ring.util.response.html">here</a>. One interesting function that we will use later, is <code>file-response</code>, in order to static files and other resources (like CSS). ### Static resources</p>
+<p>As told before, web applications also need some static resources, like CSSs, images, etc. With Ring we have some utility functions to handle it.</p>
+<ul>
+<li><p><code>wrap-file</code> - from give root-path</p></li>
+<li><p><code>wrap-resource</code> - from JVM classpath</p></li>
+</ul>
+<p>Let’s use <code>wrap-resource</code>, creates a file called <code>index.html</code> inside of <code>resources/public/</code>, them lets update our code to:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb12-1" title="1">(<span class="kw">ns</span> auth<span class="fl">-01.</span>core</a>
+<a class="sourceLine" id="cb12-2" title="2">  (<span class="at">:require</span></a>
+<a class="sourceLine" id="cb12-3" title="3">   [ring.adapter.jetty <span class="at">:as</span> jetty]</a>
+<a class="sourceLine" id="cb12-4" title="4">   [ring.util.response <span class="at">:as</span> res])</a>
+<a class="sourceLine" id="cb12-5" title="5">  (<span class="at">:use</span> [ring.middleware.resource]))</a>
+<a class="sourceLine" id="cb12-6" title="6"></a>
+<a class="sourceLine" id="cb12-7" title="7">(<span class="bu">defn</span><span class="fu"> site </span>[request]</a>
+<a class="sourceLine" id="cb12-8" title="8">  (res/resource-response <span class="st">&quot;index.html&quot;</span>))</a>
+<a class="sourceLine" id="cb12-9" title="9"></a>
+<a class="sourceLine" id="cb12-10" title="10">(<span class="bu">defn</span><span class="fu"> content-type-response </span>[response content-type]</a>
+<a class="sourceLine" id="cb12-11" title="11">  (<span class="kw">assoc-in</span> response [<span class="at">:headers</span> <span class="st">&quot;Content-Type&quot;</span>] content-type))</a>
+<a class="sourceLine" id="cb12-12" title="12"></a>
+<a class="sourceLine" id="cb12-13" title="13">(<span class="bu">defn</span><span class="fu"> wrap-content-type </span>[handler content-type]</a>
+<a class="sourceLine" id="cb12-14" title="14">  (<span class="kw">fn</span></a>
+<a class="sourceLine" id="cb12-15" title="15">    ([request]</a>
+<a class="sourceLine" id="cb12-16" title="16">     (<span class="kw">-&gt;</span> (handler request) (content-type-response content-type)))))</a>
+<a class="sourceLine" id="cb12-17" title="17"></a>
+<a class="sourceLine" id="cb12-18" title="18"><span class="co">;; Here we are using the threading macro -&gt;</span></a>
+<a class="sourceLine" id="cb12-19" title="19"><span class="co">;; check here: https://clojure.org/guides/threading_macros</span></a>
+<a class="sourceLine" id="cb12-20" title="20">(<span class="bu">def</span><span class="fu"> app</span></a>
+<a class="sourceLine" id="cb12-21" title="21">  (<span class="kw">-&gt;</span> site</a>
+<a class="sourceLine" id="cb12-22" title="22">      (wrap-resource <span class="st">&quot;public&quot;</span>)</a>
+<a class="sourceLine" id="cb12-23" title="23">      (wrap-content-type <span class="st">&quot;text/html&quot;</span>)))</a>
+<a class="sourceLine" id="cb12-24" title="24"></a>
+<a class="sourceLine" id="cb12-25" title="25">(<span class="bu">defn</span><span class="fu"> -main</span></a>
+<a class="sourceLine" id="cb12-26" title="26">  [&amp; [port]]</a>
+<a class="sourceLine" id="cb12-27" title="27">  (<span class="kw">if</span> port</a>
+<a class="sourceLine" id="cb12-28" title="28">    (jetty/run-jetty <span class="va">#'app</span> {<span class="at">:port</span> (Integer. port)})</a>
+<a class="sourceLine" id="cb12-29" title="29">    (<span class="kw">println</span> <span class="st">&quot;No port specified, exiting.&quot;</span>)))</a></code></pre></div>
+<p>Restart the app as usual and try it.</p>
+<h3 id="parameters">Parameters</h3>
+<p>The most basic way to send values to web applications is using URL-encoded parameters. The Ring provides support for these kinds of parameters via middleware (<code>ring.middleware.params</code>). If passing a single parameters, for example <code>http://localhost:3002/?name=jhon</code> your parameter map will looks like:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb13-1" title="1">{<span class="st">&quot;name&quot;</span> <span class="st">&quot;jhon&quot;</span>}</a></code></pre></div>
+<p>On another hand, if the parameter name is duplicated, like <code>http://localhost:3001/?name=jhon&amp;name=bob</code>, your parameter map will look like this:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb14-1" title="1">{<span class="st">&quot;name&quot;</span>: [<span class="st">&quot;jhon&quot;</span>, <span class="st">&quot;bob&quot;</span>]}</a></code></pre></div>
+<p>Let’s change a bit the <em>core.clj</em> and let’s handle these two scenarios regarding parameters:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb15-1" title="1">(<span class="kw">ns</span> boring-clj.core</a>
+<a class="sourceLine" id="cb15-2" title="2">(<span class="at">:require</span></a>
+<a class="sourceLine" id="cb15-3" title="3">   [ring.adapter.jetty <span class="at">:as</span> jetty])</a>
+<a class="sourceLine" id="cb15-4" title="4">  (<span class="at">:use</span> [ring.middleware.resource]</a>
+<a class="sourceLine" id="cb15-5" title="5">        [ring.middleware.params]</a>
+<a class="sourceLine" id="cb15-6" title="6">        [ring.util.response]))</a>
+<a class="sourceLine" id="cb15-7" title="7"></a>
+<a class="sourceLine" id="cb15-8" title="8">(<span class="bu">defn</span><span class="fu"> page </span>[<span class="kw">name</span>]</a>
+<a class="sourceLine" id="cb15-9" title="9">  (<span class="kw">str</span> <span class="st">&quot;&lt;html&gt;&lt;body&gt;&quot;</span></a>
+<a class="sourceLine" id="cb15-10" title="10">       (<span class="kw">cond</span></a>
+<a class="sourceLine" id="cb15-11" title="11">         (<span class="kw">vector?</span> <span class="kw">name</span>) (clojure.string/join <span class="st">&quot;,&quot;</span> <span class="kw">name</span>)</a>
+<a class="sourceLine" id="cb15-12" title="12">         (<span class="kw">string?</span> <span class="kw">name</span>) (<span class="kw">str</span> <span class="st">&quot;String paraam &quot;</span> <span class="kw">name</span>)</a>
+<a class="sourceLine" id="cb15-13" title="13">         <span class="at">:else</span> <span class="st">&quot;no URL params provided&quot;</span></a>
+<a class="sourceLine" id="cb15-14" title="14">         )</a>
+<a class="sourceLine" id="cb15-15" title="15">       <span class="st">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>))</a>
+<a class="sourceLine" id="cb15-16" title="16"></a>
+<a class="sourceLine" id="cb15-17" title="17">(<span class="bu">defn</span><span class="fu"> handler </span>[{{<span class="kw">name</span> <span class="st">&quot;name&quot;</span>} <span class="at">:params</span>}]</a>
+<a class="sourceLine" id="cb15-18" title="18">  (<span class="kw">-&gt;</span> (response (page <span class="kw">name</span>))</a>
+<a class="sourceLine" id="cb15-19" title="19">      (content-type <span class="st">&quot;text/html&quot;</span>)))</a>
+<a class="sourceLine" id="cb15-20" title="20"></a>
+<a class="sourceLine" id="cb15-21" title="21">(<span class="bu">def</span><span class="fu"> app</span></a>
+<a class="sourceLine" id="cb15-22" title="22">  (<span class="kw">-&gt;</span> handler wrap-params))</a>
+<a class="sourceLine" id="cb15-23" title="23"></a>
+<a class="sourceLine" id="cb15-24" title="24">(<span class="bu">defn</span><span class="fu"> -main</span></a>
+<a class="sourceLine" id="cb15-25" title="25">  [&amp; [port]]</a>
+<a class="sourceLine" id="cb15-26" title="26">  (<span class="kw">if</span> port</a>
+<a class="sourceLine" id="cb15-27" title="27">    (jetty/run-jetty <span class="va">#'app</span> {<span class="at">:port</span> (Integer. port)})</a>
+<a class="sourceLine" id="cb15-28" title="28">    (<span class="kw">println</span> <span class="st">&quot;No port specified, exiting.&quot;</span>)))</a></code></pre></div>
+<p>Here if a single (and unique) parameter is used, we just show it as <code>String param &lt;name&gt;</code>, if multiples, (<code>vector?</code>) we join it as a unique string separated by a comma. Test it with:</p>
+<ul>
+<li><p>http://localhost:3005/?name=Jhon</p></li>
+<li><p>http://localhost:3005/?name=Jhon&amp;name=Bob</p></li>
+</ul>
+<h3 id="sessions">Sessions</h3>
+<p>One another common thing used in web apps are sessions, as expected we need a middleware for it. Let’s update our core.clj, to plain a bit with the session.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb16-1" title="1">(<span class="kw">ns</span> boring-clj.core</a>
+<a class="sourceLine" id="cb16-2" title="2">  (<span class="at">:require</span></a>
+<a class="sourceLine" id="cb16-3" title="3">   [ring.adapter.jetty <span class="at">:as</span> jetty])</a>
+<a class="sourceLine" id="cb16-4" title="4">  (<span class="at">:use</span> [ring.middleware.resource]</a>
+<a class="sourceLine" id="cb16-5" title="5">        [ring.middleware.params]</a>
+<a class="sourceLine" id="cb16-6" title="6">        [ring.middleware.session]</a>
+<a class="sourceLine" id="cb16-7" title="7">        [ring.middleware.reload <span class="at">:refer</span> [wrap-reload]]</a>
+<a class="sourceLine" id="cb16-8" title="8">        [ring.util.response]))</a>
+<a class="sourceLine" id="cb16-9" title="9"></a>
+<a class="sourceLine" id="cb16-10" title="10">(<span class="bu">defn</span><span class="fu"> page </span>[<span class="kw">name</span> total-parameters]</a>
+<a class="sourceLine" id="cb16-11" title="11">  (<span class="kw">str</span> <span class="st">&quot;&lt;html&gt;&lt;body&gt;&quot;</span></a>
+<a class="sourceLine" id="cb16-12" title="12">       <span class="st">&quot;&lt;b&gt;&quot;</span>(<span class="kw">str</span> <span class="st">&quot;total parameters &quot;</span> total-parameters) <span class="st">&quot;&lt;/b&gt;&quot;</span></a>
+<a class="sourceLine" id="cb16-13" title="13">       (<span class="kw">cond</span></a>
+<a class="sourceLine" id="cb16-14" title="14">         (<span class="kw">vector?</span> <span class="kw">name</span>) (<span class="kw">str</span> <span class="st">&quot;Vector &quot;</span>(clojure.string/join <span class="st">&quot;,&quot;</span> <span class="kw">name</span>))</a>
+<a class="sourceLine" id="cb16-15" title="15">         (<span class="kw">string?</span> <span class="kw">name</span>) (<span class="kw">str</span> <span class="st">&quot;String param &quot;</span> <span class="kw">name</span>)</a>
+<a class="sourceLine" id="cb16-16" title="16">         <span class="at">:else</span> <span class="st">&quot;no URL params provided&quot;</span></a>
+<a class="sourceLine" id="cb16-17" title="17">         )</a>
+<a class="sourceLine" id="cb16-18" title="18">       <span class="st">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>))</a>
+<a class="sourceLine" id="cb16-19" title="19"></a>
+<a class="sourceLine" id="cb16-20" title="20">(<span class="bu">defn</span><span class="fu"> clean-session </span>[session]</a>
+<a class="sourceLine" id="cb16-21" title="21">  (<span class="kw">assoc</span> <span class="at">:session</span> <span class="va">nil</span>))</a>
+<a class="sourceLine" id="cb16-22" title="22"></a>
+<a class="sourceLine" id="cb16-23" title="23">(<span class="bu">defn</span><span class="fu"> handler </span>[{session <span class="at">:session</span> {<span class="kw">name</span> <span class="st">&quot;name&quot;</span>} <span class="at">:params</span>}]</a>
+<a class="sourceLine" id="cb16-24" title="24">  (<span class="kw">let</span> [count-names (<span class="at">:count-names</span> session <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb16-25" title="25">        total-count (<span class="kw">count</span> <span class="kw">name</span>)</a>
+<a class="sourceLine" id="cb16-26" title="26">        session (<span class="kw">assoc</span> session <span class="at">:count-names</span> (<span class="kw">+</span> total-count count-names))</a>
+<a class="sourceLine" id="cb16-27" title="27">        ]</a>
+<a class="sourceLine" id="cb16-28" title="28">    (<span class="kw">-&gt;</span> (response (page <span class="kw">name</span> (<span class="at">:count-names</span> session)))</a>
+<a class="sourceLine" id="cb16-29" title="29">        (content-type <span class="st">&quot;text/html&quot;</span>)</a>
+<a class="sourceLine" id="cb16-30" title="30">        (<span class="kw">assoc</span> <span class="at">:session</span> session))))</a>
+<a class="sourceLine" id="cb16-31" title="31"></a>
+<a class="sourceLine" id="cb16-32" title="32">(<span class="bu">def</span><span class="fu"> app</span></a>
+<a class="sourceLine" id="cb16-33" title="33">  (<span class="kw">-&gt;</span> handler</a>
+<a class="sourceLine" id="cb16-34" title="34">      (wrap-params)</a>
+<a class="sourceLine" id="cb16-35" title="35">      (wrap-reload)</a>
+<a class="sourceLine" id="cb16-36" title="36">      (wrap-session)))</a>
+<a class="sourceLine" id="cb16-37" title="37"></a>
+<a class="sourceLine" id="cb16-38" title="38">(<span class="bu">defn</span><span class="fu"> -main</span></a>
+<a class="sourceLine" id="cb16-39" title="39">  [&amp; [port]]</a>
+<a class="sourceLine" id="cb16-40" title="40">  (<span class="kw">if</span> port</a>
+<a class="sourceLine" id="cb16-41" title="41">    (jetty/run-jetty <span class="va">#'app</span> {<span class="at">:port</span> (Integer. port)})</a>
+<a class="sourceLine" id="cb16-42" title="42">    (<span class="kw">println</span> <span class="st">&quot;No port specified, exiting.&quot;</span>)))</a></code></pre></div>
+<p>Not special here, we update the <code>handler</code> function to extract (using destructuring) the session from the request. Given the functional the approach used by Ring, manage session works a bit differently: here we count all parameters used in each requests replacing the session with an updated session (<code>count-names</code>)</p>
+<h3 id="automatic-reloading">Automatic Reloading</h3>
+<p>One annoying thing until know is that we need to restart the server on every single change on the code. As mentioned in the beginning, Ring has a library called <code>ring-devel</code> for this job. Include the middleware in your namespace with:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb17-1" title="1">[ring.middleware.reload <span class="at">:refer</span> [wrap-reload]</a></code></pre></div>
+<p>And update your <code>app</code> handle to:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure"><code class="sourceCode clojure"><a class="sourceLine" id="cb18-1" title="1">(<span class="bu">def</span><span class="fu"> app</span></a>
+<a class="sourceLine" id="cb18-2" title="2">  (<span class="kw">-&gt;</span> handler</a>
+<a class="sourceLine" id="cb18-3" title="3">      (wrap-params)</a>
+<a class="sourceLine" id="cb18-4" title="4">      (wrap-reload)))</a></code></pre></div>
+<p>Now you just need to run the server once. Once this is very quick and easy to set up, this approach does not reload the application state, so maybe some time is will be required to restart the server. You can check how to do it <a href="https://github.com/ring-clojure/ring/wiki/Setup-for-development">here</a>.</p>
+<h3 id="conclusions">Conclusions</h3>
+<p>This post presented the most fundamentals parts of Ring routing Library. We saw the basics concepts about Ring and how the library is organized, passing by the most useful resources we need to build web apps: requests, responses, static resources, parameters, and sessions. By the end, we quickly saw how to automatically reloading the app using a quick approach.</p>
+<h3 id="references">References</h3>
+<ul>
+<li><p>https://github.com/ring-clojure/ring</p></li>
+<li><p>https://clojure.org/</p></li>
+</ul>
+
+    </main>
+
+    <footer>
+      Site proudly generated by
+      <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+    </footer>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-131025377-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+
+     gtag('config', 'UA-131025377-1');
+    </script>
+
+  </body>
+</html>
